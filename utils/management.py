@@ -5,7 +5,6 @@ import shutil
 import yaml
 from pathlib import Path as P
 
-import config
 
 
 """
@@ -30,7 +29,7 @@ def initiate_experiment(exp_name):
 
 def initiate_run(exp_name: str, config: dict = None, run_name: str = None):
 
-    number_run = len(os.walk('dir_name').next()[1])
+    number_run = -1
 
     run_dir = P("exp_data") / exp_name / (run_name if run_name is not None else (f'run_{str(number_run + 1)}'))
 
@@ -82,6 +81,16 @@ def clear_run(exp_name: str, run_name: str = None):
 
     return 1
 
+def clear_data():
+    try:
+        shutil.rmtree(str(P("exp_data")))
+        os.makedirs(str(P("exp_data")))
+    except Exception as e:
+        print("Clear of data failed: Directories could not be deleted")
+        print(e)
+        return -1
+    return 1
+
 def load_config(exp_name: str, run_name: str, config_name: str):
     config_path = P('config') / (config_name+'.yaml')
     run_path = P('exp_data') / exp_name / run_name
@@ -102,25 +111,27 @@ def load_config(exp_name: str, run_name: str, config_name: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--init_exp", action="store_true", help="Initialize experiment")
-    parser.add_argument("--init_run", action="store_true", help="Initialize run")
-    parser.add_argument("--clear_run", action="store_true", help="Clear run. Caution, potential data loss!")
-    parser.add_argument("--conf", action='store_true' default=False, help="Load and save config file to run")
-    parser.add_argument("-exp_name", type=str, default=None, help="experiment name")
-    parser.add_argument("-run_name", type=str, default=None help="run experiment")
+    parser.add_argument("--init_exp", action="store_true",default=False, help="Initialize experiment")
+    parser.add_argument("--init_run", action="store_true",default=False, help="Initialize run")
+    parser.add_argument("--clear_run", action="store_true",default=False, help="Clear run. Caution, potential data loss!")
+    parser.add_argument("--conf", action='store_true', default=False, help="Load and save config file to run")
+    parser.add_argument("--clear_data", action="store_true",default=False, help="Clear data")
+    parser.add_argument("-exp", type=str, default=None, help="experiment name")
+    parser.add_argument("-run", type=str, default=None, help="run experiment")
     parser.add_argument("-config", type=str, default=None, help="Name of config file")
-    parser.add_argument("-run_name", type=str, default=None)
     args = parser.parse_args()
 
     if args.init_exp:
-        assert args.exp_name is not None
-        initiate_experiment(args.exp_name)
+        assert args.exp is not None
+        initiate_experiment(args.exp)
     if args.init_run:
-        assert args.exp_name is not None and args.run_name is not None
-        initiate_run(args.exp_name, args.config, args.run_name)
+        assert args.exp is not None and args.run is not None
+        initiate_run(args.exp, args.config, args.run)
     if args.clear_run:
-        assert args.exp_name is not None and args.run_name is not None
-        clear_run(args.exp_name, args.run_name)
+        assert args.exp is not None and args.run is not None
+        clear_run(args.exp, args.run)
     if args.conf:
-        assert args.exp_name is not None and args.run_name is not None and args.config is not None
-        load_config(args.exp_name, args.run_name, args.config)
+        assert args.exp is not None and args.run is not None and args.config is not None
+        load_config(args.exp, args.run, args.config)
+    if args.clear_data:
+        clear_data()

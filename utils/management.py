@@ -91,7 +91,7 @@ def clear_data():
         return -1
     return 1
 
-def load_config(exp_name: str, run_name: str, config_name: str):
+def write_config(exp_name: str, run_name: str, config_name: str):
     config_path = P('config') / (config_name+'.yaml')
     run_path = P('exp_data') / exp_name / run_name
     try:
@@ -108,6 +108,15 @@ def load_config(exp_name: str, run_name: str, config_name: str):
         return -1
     return 1
 
+def load_config(exp_name: str, run_name: str):
+    config_path = P('exp_data') / exp_name / run_name / 'config.yaml'
+    try:
+        with open(str(config_path), 'r') as f:
+            config = yaml.safe_load(f)
+    except:
+        print("Config file does not exist")
+        return -1
+    return config
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -132,6 +141,6 @@ if __name__ == "__main__":
         clear_run(args.exp, args.run)
     if args.conf:
         assert args.exp is not None and args.run is not None and args.config is not None
-        load_config(args.exp, args.run, args.config)
+        write_config(args.exp, args.run, args.config)
     if args.clear_data:
         clear_data()

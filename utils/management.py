@@ -14,7 +14,12 @@ This file bundles all helper functions responsible for managing the experiments 
 
 def initiate_experiment(exp_name):
 
-    exp_dir = P("exp_data") / exp_name
+    if "EXP_DIRECTORY" in os.environ:
+        exp_dir = P(os.environ["EXP_DIRECTORY"]) / "exp_data" / exp_name
+    else:
+        print("EXP_DIRECTORY environment variable not set. Using relative path...")
+        exp_dir = P("exp_data") / exp_name
+
 
     if os.path.exists(str(exp_dir)):
         print("Experiment directory exists...")
@@ -31,9 +36,15 @@ def initiate_run(exp_name: str, config: dict = None, run_name: str = None):
 
     number_run = -1
 
-    run_dir = P("exp_data") / exp_name / (run_name if run_name is not None else (f'run_{str(number_run + 1)}'))
+    if "EXP_DIRECTORY" in os.environ:
+        exp_dir = P(os.environ["EXP_DIRECTORY"]) / "exp_data" / exp_name
+        run_dir = P(os.environ["EXP_DIRECTORY"]) / "exp_data" / exp_name / (run_name if run_name is not None else (f'run_{str(number_run + 1)}'))
+    else:
+        print("EXP_DIRECTORY environment variable not set. Using relative path...")
+        exp_dir = P("exp_data") / exp_name
+        run_dir = P("exp_data") / exp_name / (run_name if run_name is not None else (f'run_{str(number_run + 1)}'))
 
-    if not os.path.exists(str(P("exp_data") / exp_name)):
+    if not os.path.exists(str(exp_dir)):
         print("Experiment directory not initialized yet")
         initiate_experiment(exp_name)
 
@@ -64,7 +75,16 @@ def initiate_run(exp_name: str, config: dict = None, run_name: str = None):
 
 def clear_run(exp_name: str, run_name: str = None):
 
-    run_dir = P("exp_data") / exp_name / (run_name if run_name is not None else (f'run_{str(number_run + 1)}'))
+    number_run = -1
+
+    if "EXP_DIRECTORY" in os.environ:
+        exp_dir = P(os.environ["EXP_DIRECTORY"]) / "exp_data" / exp_name
+        run_dir = P(os.environ["EXP_DIRECTORY"]) / "exp_data" / exp_name / (run_name if run_name is not None else (f'run_{str(number_run + 1)}'))
+    else:
+        print("EXP_DIRECTORY environment variable not set. Using relative path...")
+        exp_dir = P("exp_data") / exp_name
+        run_dir = P("exp_data") / exp_name / (run_name if run_name is not None else (f'run_{str(number_run + 1)}'))
+
 
     if not os.path.exists(str(run_dir)):
         print("Run directory does not exist")
@@ -92,8 +112,14 @@ def clear_data():
     return 1
 
 def write_config(exp_name: str, run_name: str, config_name: str):
-    config_path = P('config') / (config_name+'.yaml')
-    run_path = P('exp_data') / exp_name / run_name
+    if "EXP_DIRECTORY" in os.environ:
+        config_path = P(os.environ["EXP_DIRECTORY"]) / "config" / (config_name+'.yaml')
+        run_path = P(os.environ["EXP_DIRECTORY"]) / "exp_data" / exp_name / run_name
+    else:
+        print("EXP_DIRECTORY environment variable not set. Using relative path...")
+        config_path = P("config") / (config_name+'.yaml')
+        run_path = P("exp_data") / exp_name / run_name
+
     try:
         with open(str(config_path), 'r') as f:
             config = yaml.safe_load(f)
@@ -109,7 +135,11 @@ def write_config(exp_name: str, run_name: str, config_name: str):
     return 1
 
 def load_config(exp_name: str, run_name: str):
-    config_path = P('exp_data') / exp_name / run_name / 'config.yaml'
+    if "EXP_DIRECTORY" in os.environ:
+        config_path = P(os.environ["EXP_DIRECTORY"]) / "exp_data" / exp_name / run_name / 'config.yaml'
+    else:
+        print("EXP_DIRECTORY environment variable not set. Using relative path...")
+        config_path = P("exp_data") / exp_name / run_name / 'config.yaml'
     try:
         with open(str(config_path), 'r') as f:
             config = yaml.safe_load(f)

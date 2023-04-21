@@ -1,2 +1,2 @@
-from .logger import Logger
-from management import *
+from .utils.logger import Logger
+from .utils.management import *

@@ -20,5 +20,9 @@ alias conf='python $EXP_DIRECTORY/utils/management.py --conf'
 alias del='python $EXP_DIRECTORY/utils/management.py --clear_data'
 
 # Activate experiment or run for easier running of scripts. Usage
-alias aexp='export ACTIVATE_EXP='
-alias arun='export ACTIVATE_RUN='
+function setexp() {
+    export ACTIVATE_EXP="$1"
+}
+function setrun() {
+    export ACTIVATE_RUN="$1"
+}

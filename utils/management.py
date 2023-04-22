@@ -161,10 +161,10 @@ if __name__ == "__main__":
     parser.add_argument("-config", type=str, default=None, help="Name of config file")
     args = parser.parse_args()
 
-    if 'ACTIVATE_EXP' in os.environ:
+    if args.exp is not None and 'ACTIVATE_EXP' in os.environ:
         print("Current experiment: " + os.environ['ACTIVATE_EXP'])
         args.exp = os.environ['ACTIVATE_EXP']
-    if 'ACTIVATE_RUN' in os.environ:
+    if args.run is not None and 'ACTIVATE_RUN' in os.environ:
         print("Current run: " + os.environ['ACTIVATE_RUN'])
         args.run = os.environ['ACTIVATE_RUN']
 

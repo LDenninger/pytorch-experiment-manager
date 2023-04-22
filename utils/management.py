@@ -127,6 +127,7 @@ def write_config(exp_name: str, run_name: str, config_name: str):
         print("Config file does not exist")
         return -1
     try:
+        config['run_name'] = run_name
         with open(str(run_path / "config.yaml"), 'w') as f:
             yaml.safe_dump(config, f)
     except:

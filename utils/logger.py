@@ -96,7 +96,7 @@ class Logger():
         if model is not None and self.log_gradients:
             self.log_model_gradients(epoch, model, iteration)
 
-        if self.save_frequency != 0 and (epoch % self.checkpoint_frequency == 0):
+        if self.checkpoint_frequency != 0 and (epoch % self.checkpoint_frequency == 0) and iteration is None:
 
             self.checkpoint(epoch, model, optimizer)
 
@@ -122,7 +122,8 @@ class Logger():
         prefix_name = f'epoch_metrics/' if iteration is None else f'iteration_metrics/'
 
         for key, value in data.items():
-            self.writer.add_scalar(prefix_name + key, int(value), (epoch if iteration is None else ((epoch-1)*self.config['num_iterations'] + iteration)))
+            if value!=-1:
+                self.writer.add_scalar(prefix_name + key, int(value), (epoch if iteration is None else ((epoch-1)*self.config['num_iterations'] + iteration)))
     
     def log_model_gradients(self, 
                             epoch: int,
@@ -133,7 +134,7 @@ class Logger():
 
         for tag, value in model.named_parameters():
             if value.grad is not None:
-                self.logger.add_histogram(prefix_name + tag + "/grad", value.grad.cpu(), epoch if iteration is None else ((epoch-1)*self.config['num_iterations'] + iteration))
+                self.writer.add_histogram(prefix_name + tag + "/grad", value.grad.cpu(), epoch if iteration is None else ((epoch-1)*self.config['num_iterations'] + iteration))
 
     def checkpoint(self, epoch: int, model: torch.nn.Module, optimizer: torch.optim.Optimizer = None):
 

@@ -26,3 +26,10 @@ function setexp() {
 function setrun() {
     export ACTIVATE_RUN="$1"
 }
+
+function setup() {
+    echo "------ Experiment Environment Setup ------\n"
+    echo "  Experiment directory ---> $EXP_DIRECTORY"
+    echo "  Current experiment ---> $ACTIVATE_EXP"
+    echo "  Current run ---> $ACTIVATE_RUN"
+}

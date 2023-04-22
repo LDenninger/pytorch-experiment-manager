@@ -136,14 +136,14 @@ class Logger():
             if value.grad is not None:
                 self.writer.add_histogram(prefix_name + tag + "/grad", value.grad.cpu(), epoch if iteration is None else ((epoch-1)*self.config['num_iterations'] + iteration))
 
-    def checkpoint(self, epoch: int, model: torch.nn.Module, optimizer: torch.optim.Optimizer = None):
+    def checkpoint(self, epoch: int, model: torch.nn.Module, optimizer: torch.optim.Optimizer = None, name: str = None):
 
         """
         Save state of the model and optionally of the optimizer to the checkpoint directory.
         
         """
 
-        save_path = self.run_dir / "checkpoints" / f'checkpoint_{epoch}.pth'
+        save_path = self.run_dir / "checkpoints" / f'checkpoint_{epoch}.pth' if name is None else (self.run_dir / "checkpoints" / (name+'.pth'))
 
         torch.save({
             'epoch': epoch,

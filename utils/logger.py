@@ -1,5 +1,6 @@
 import pathlib as P
-import ruamel.yaml as yaml
+import yaml
+#import ruamel.yaml
 import torch
 import pandas as pd
 
@@ -53,7 +54,9 @@ class Logger():
         # In anonymous mode, the logger does not write to disk but rather saves the data internally to be retrieved later from the user.
         self.anon_mode = anon_mode
 
-        self.log_internal
+        self.log_internal = log_internal
+
+        # YAML parser for logging
 
         self.epoch = 1
         self.iteration = 1
@@ -97,15 +100,17 @@ class Logger():
         else:
             if "EXP_DIRECTORY" in os.environ:
                 self.exp_dir = P(os.environ["EXP_DIRECTORY"]) / 'exp_data' / exp_name
+                self.run_dir = self.exp_dir / run_name
+
             else:
                 self.anon_mode = True
                 print("Experiment directory not set. Please set the environment variable EXP_DIRECTORY.\n Logger running in anonymous mode --> No logging to disk.")
-            self.exp_dir = P('exp_data') / exp_name
-            self._dir_set = True
-            self.run_dir = self.exp_dir / run_name
 
             if not os.path.exists(str(self.run_dir)):
                 print('Run directory does not exist.')
+            else:
+                self._dir_set = True
+
         
         
         self.model_config = model_config
@@ -144,9 +149,9 @@ class Logger():
         self.iteration = 0
 
         if id is not None:
-            assert id not in self._internal_save.keys(), 'Please choose a unique identifier for this run.'
+            assert id not in self._internal_log.keys(), 'Please choose a unique identifier for this run.'
         else:
-            id = 'auto_' + str(len(self._internal_log.keys())).zfill(4) if self.run_name is None else self.run_name + str(len(self._internal_log.keys())).zfill(4)
+            id = 'auto_' + str(len(self._internal_log.keys())).zfill(4) if self.run_name is None else self.run_name + '_' + str(len(self._internal_log.keys())).zfill(4)
 
         self.curr_id = id
         self._internal_log[id] = {}
@@ -245,7 +250,7 @@ class Logger():
         if self.verbose and data is not None:
             output = ''
             output += f'-----Epoch {epoch} Results -----\n'
-            output += yaml.dump(data, default_flow_style=False)
+            output += yaml.safe_dump(data, default_flow_style=False)
             print(output)
 
         if self.disabled:
@@ -260,9 +265,8 @@ class Logger():
             if model is not None and self.log_gradients:
                 self.log_model_gradients(epoch, model, iteration)
 
-            if self.model_config['save_frequency']!= 0 and (epoch % self.model_config['save_frequency'] == 0) and iteration is None:
-
-                self.checkpoint(epoch, model, optimizer)
+            if self.model_config['save_frequency']!= 0 and (self.epoch % self.model_config['save_frequency'] == 0) and iteration is None:
+                self.checkpoint(self.epoch, model, optimizer)
         except:
             print(f'Logging failed in Epoch: {self.epoch}, Iteration: {self.iteration}.')
             return -1
@@ -302,6 +306,13 @@ class Logger():
             self._log_internal(data=data_intern)
         if not self.anon_mode:
             for key, value in data.items():
+                if type(value)==list and len(value)==1:
+                    value = value[0]
+                elif type(value)==dict:
+                    for key2, value2 in value.items():
+                        if value2!= -1:
+                            self.writer.add_scalar(prefix_name + key + '/' + key2, int(value2), log_iter)
+                    continue
                 if value!=-1:
                     self.writer.add_scalar(prefix_name + key, int(value), log_iter)
         return 1
@@ -363,9 +374,8 @@ class Logger():
                     name = str(int(id) + 1).zfill(3)
 
             save_path = self.run_dir / "logs" / f'pOpt_{name}.pth' if name is None else (self.run_dir / "checkpoints" / (name+'.pth'))
-            
-            yaml = yaml.YAML()
-            yaml.dump(save_dict, save_path)
+            with open(str(save_path), 'wb') as f:
+                yaml.safe_dump(save_dict, f)
     
         self._tuning = False
         
@@ -393,11 +403,10 @@ class Logger():
         return 1
     
     def save_config(self, save_path: str):
-        yaml = yaml.YAML()
-        yaml.dump(self.model_config, open(save_path, 'w'))
+        with open(save_path, 'w') as f:
+            yaml.dump(self.model_config, f)
 
-    def _log_internal(self, type: str, data, id: str = None):
-
+    def _log_internal(self, data, type: str = None, id: str = None):
 
         if self.disabled:
             return 2
@@ -416,7 +425,7 @@ class Logger():
             for k, v in data.items():
                 if k not in self._internal_log[id].keys():
                     self._internal_log[id][k] = []
-                self._internal_save[id][k].append(v)
+                self._internal_log[id][k].append(v)
 
         if self._training:
             if id is None:
@@ -424,7 +433,7 @@ class Logger():
             for k, v in data.items():
                 if k not in self._internal_log[id].keys():
                     self._internal_log[id][k] = []
-                self._internal_save[id][k].append(v)
+                self._internal_log[id][k].append(v)
             return 1
         
         if self._evaluation:
@@ -436,7 +445,7 @@ class Logger():
             for k, v in data.items():
                 if k not in self._internal_log[id].keys():
                     self._internal_log[id][k] = []
-                self._internal_save[id][k].append(v)
+                self._internal_log[id][k].append(v)
             return 1
  
             
@@ -511,7 +520,7 @@ class Logger():
                 __resolve(self.model_config['evaluation']['metrics'], [x['value'] for x in data_structure['children']])
             # Value for each evaluation metric 
 
-    def _get_log_iter(self, epoch: int = None, iteration: int = None):
+    def _get_log_iteration(self, epoch: int = None, iteration: int = None):
 
         if epoch is not None and iteration is not None:
             n = epoch*self.model_config['num_iterations'] + iteration

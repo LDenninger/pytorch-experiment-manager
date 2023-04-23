@@ -2,7 +2,11 @@ import argparse
 import os
 import shutil
 
-import ruamel.yaml as yaml
+import yaml
+#import ruamel.yaml
+#yaml = ruamel.yaml.YAML()
+#yaml.default_flow_style = False
+#yaml.indent(mapping=2, sequence=4, offset=2)
 from pathlib import Path as P
 
 
@@ -63,7 +67,6 @@ def initiate_run(exp_name: str, config: dict = None, run_name: str = None):
         return -1
     if config is not None:
         try:
-            yaml = yaml.YAML()
             yaml.dump(config, (run_dir / "config.yaml"))
         except Exception as e:
             print("Initialization failed: Configuration file could not be created")
@@ -119,15 +122,16 @@ def write_config(exp_name: str, run_name: str, config_name: str):
         print("EXP_DIRECTORY environment variable not set. Using relative path...")
         config_path = P("config") / (config_name+'.yaml')
         run_path = P("exp_data") / exp_name / run_name
-    yaml = yaml.YAML()
     try:
-        config = yaml.load(config_path)
+        with open(str(config_path), 'r') as f:
+            config = yaml.safe_load(f)
     except:
         print("Config file does not exist")
         return -1
     try:
         config['run_name'] = run_name
-        yaml.dump(config, (run_path / "config.yaml"))
+        with open(str(run_path / "config.yaml"), 'w') as f:
+            yaml.safe_dump(config, f)
     except:
         print("Config file could not be saved to run directory")
         return -1
@@ -140,8 +144,8 @@ def load_config(exp_name: str, run_name: str):
         print("EXP_DIRECTORY environment variable not set. Using relative path...")
         config_path = P("exp_data") / exp_name / run_name / 'config.yaml'
     try:
-        yaml = yaml.YAML()
-        config = yaml.load(config_path)
+        with open(str(config_path), 'r') as f:
+            config = yaml.safe_load(f)
     except:
         print("Config file does not exist")
         return -1

@@ -1,2 +1,2 @@
-from .utils.logger import Logger
+from .utils.logging import Logger
 from .utils.management import *

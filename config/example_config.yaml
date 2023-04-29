@@ -20,9 +20,10 @@
   'eval_frequency' : 2,
   'pre_processing': {
         'flatten': True,
-        'flatten_only_img_sizes': True,
+        'flatten_only_img_size': True,
         'rgb2gray': True,
-        'lbl_oneHot': True
+        'lbl_oneHot': True,
+        'squeeze': True
   },
   'layers': [
         {

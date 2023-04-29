@@ -19,7 +19,8 @@ class Logger():
                     run_name: str = None,
                         model_config: dict = None,
                             writer: SummaryWriter = None,
-                                anon_mode: bool = False,
+                                save_external: bool = True,                                    
+                                    save_internal: bool = False,                                    
                                 ):
         
         ### Run Information ###
@@ -58,6 +59,9 @@ class Logger():
 
         self.model_config = model_config
 
+        self.save_internal = save_internal
+        self._internal_log = {}
+
         
         
     def log_data(self, epoch: int, data: dict,  iteration: int=None):
@@ -73,13 +77,39 @@ class Logger():
                             }
         
         """
+        if self.save_external:
+            prefix_name = f'epoch_metrics/' if iteration is None else f'iteration_metrics/'
 
-        prefix_name = f'epoch_metrics/' if iteration is None else f'iteration_metrics/'
+            log_iter = epoch if iteration is None else (self.model_config['num_iterations']*(epoch-1) + iteration)
 
-        log_iter = epoch if iteration is None else (self.model_config['num_iterations']*(epoch-1) + iteration)
+            for key, value in data.items():
+                self.writer.add_scalar(prefix_name + key, int(value), log_iter)
+            
+        if self.save_internal:
+            self._save_internal(data)
+    
+    def get_log(self):
+        return self._internal_log
 
+    def get_last_log(self):
+        last_log = {}
+        for key in self._internal_log.keys():
+            last_log[key] = self._internal_log[key][-1]
+        return last_log
+
+    def enable_internal_log(self):
+        self.save_internal = True
+    
+    def disable_internal_log(self):
+        self.save_internal = False
+    
+    def _save_internal(self, data):
         for key, value in data.items():
-            self.writer.add_scalar(prefix_name + key, int(value), log_iter)
+            if not key in self._internal_log.keys():
+                self._internal_log[key] = []
+            self._internal_log[key].append(value)
+    
+
 
 
 
